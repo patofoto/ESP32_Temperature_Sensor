@@ -1,0 +1,77 @@
+esphome:
+  name: esp32-bme280-sensor
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+    
+i2c:
+  sda: 21
+  scl: 22
+  scan: true
+  id: bus_a
+  
+time:
+  - platform: homeassistant
+    id: esptime  
+
+# Place fonts in /config/esphome
+font:
+  - file: 'Tahoma.ttf'  
+    id: font1
+    size: 12
+    
+  - file: 'Tahoma-Bold.ttf'
+    id: font2
+    size: 12  
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+  password: "30653711"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password 
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "ESP32-Temperature-Sensor"
+    password: "30653711"
+
+captive_portal:
+
+sensor:
+  - platform: bme280
+    temperature:
+      id: temp
+      name: "Temperature"
+      oversampling: 16x
+    pressure:
+      id: press
+      name: "Pressure"
+    address: 0x76
+    update_interval: 5s
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    lambda: |-
+      it.print(64, 0, id(font2), TextAlign::TOP_CENTER, "Server Closet Temp");
+      it.line(0, 16, 128, 16);
+      it.print(0, 22, id(font1), TextAlign::TOP_LEFT, "Time");
+      it.strftime(64, 22, id(font1), TextAlign::TOP_LEFT, "%H:%M", id(esptime).now());
+      it.print(0, 36, id(font1), TextAlign::TOP_LEFT, "Temp");
+      it.printf(64, 36, id(font1), TextAlign::TOP_LEFT, "%.1f°F", (((id(temp).state))*9)/5+32);    
+
+mqtt:
+  broker: 192.168.1.126
+  port: 1883
+  username: patofotomqtt
+  password: 306537
